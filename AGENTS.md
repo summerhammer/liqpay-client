@@ -13,7 +13,7 @@ Prune stale entries.
 
 `LiqPayClient` is a Swift package for integrating with the LiqPay (liqpay.ua) payment platform from **server-side** Swift apps only. It encapsulates LiqPay's request/response and signing routines (base64-encoded payload + signature). It is not intended for use in client-side (iOS/macOS app) targets.
 
-This is an early-stage package — `Package.swift` currently declares a single `LiqPayClient` library target with no dependencies yet; most functionality is still to be built.
+The domain logic (signing, `pay`/`status` request/response models, status-outcome classification, webhook verification) was extracted from `fitnessart-backend`'s ad-hoc LiqPay integration, and the module/facade shape (`Client` → `.payments`/`.webhooks`, `LiqPayTransport` protocol, `LiqPayAction` protocol) was modeled after the sibling `CloverClient` package. See [ENDPOINTS.md](ENDPOINTS.md) for what's implemented vs. still to add.
 
 ## Architecture
 
@@ -21,6 +21,25 @@ This is an early-stage package — `Package.swift` currently declares a single `
 - Concrete transport implementations (e.g. an AsyncHTTPClient-backed or URLSession-backed client) belong in separate modules/targets, not in core.
 - Framework-specific integrations (e.g. Vapor webhook handlers) belong in their own separate module (e.g. a future `LiqPayClientVapor` target), never folded into core.
 - When adding a new transport or framework integration, add a new target/product in `Package.swift` rather than adding conditional code or optional dependencies to the core target.
+- `Client` (this package's facade) and `Vapor.Client` share a name. Any file importing both `Vapor` and `LiqPayClient` must qualify as `LiqPayClient.Client` / `Vapor.Client` — don't rely on bare `Client` resolving correctly.
+
+## Adding a new LiqPay action
+
+1. Add an unchecked row to [ENDPOINTS.md](ENDPOINTS.md) if one doesn't already exist.
+2. Model the action as a `Sources/LiqPayClient/Actions/<Name>Request.swift` type conforming to
+   `LiqPayAction`, with a manual `CodingKeys`/`encode(to:)` matching LiqPay's exact wire field
+   names (see `PayRequest`/`StatusRequest`). Reuse `LiqPayResponse`/`LiqPayOutcome` as the
+   `Response` unless the action's payload genuinely differs.
+3. If the action introduces a new terminal status (LiqPay's `status` field), extend
+   `LiqPayOutcome`'s classification in `Responses/LiqPayOutcome.swift` — don't make callers
+   re-derive LiqPay's status vocabulary themselves.
+4. Expose it on the right `Client.*` sub-facade (add a method to `Client+Payments.swift`, or a new
+   `Client+<Feature>.swift` extension file for a new feature area), following the "struct holding a
+   back-reference, instantiated on demand via a computed property" pattern — see `Client.Payments`.
+5. Add `TestFactories`/`MockTransport`-based tests asserting the exact wire field names/omissions
+   (see `PayRequestEncodingTests`) and the facade method's signing/outcome behavior (see
+   `ClientPaymentsChargeTests`).
+6. Flip the checkbox in ENDPOINTS.md.
 
 ## Platform
 
