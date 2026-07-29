@@ -17,6 +17,8 @@ public struct PayRequest: LiqPayAction {
     public var applePayToken: String?
     /// Sandbox-only plain-card testing path.
     public var card: LiqPaySandboxCard?
+    /// ПРРО fiscalization payload (`rro_info`).
+    public var rroInfo: LiqPayRROInfo?
     /// Webhook callback URL LiqPay should POST the result to (`server_url`).
     public var serverURL: URL?
     public var language: String?
@@ -31,6 +33,7 @@ public struct PayRequest: LiqPayAction {
         paytype: String? = nil,
         applePayToken: String? = nil,
         card: LiqPaySandboxCard? = nil,
+        rroInfo: LiqPayRROInfo? = nil,
         serverURL: URL? = nil,
         language: String? = nil
     ) {
@@ -43,6 +46,7 @@ public struct PayRequest: LiqPayAction {
         self.paytype = paytype
         self.applePayToken = applePayToken
         self.card = card
+        self.rroInfo = rroInfo
         self.serverURL = serverURL
         self.language = language
     }
@@ -57,6 +61,7 @@ public struct PayRequest: LiqPayAction {
         case cardExpMonth = "card_exp_month"
         case cardExpYear = "card_exp_year"
         case cardCvv = "card_cvv"
+        case rroInfo = "rro_info"
     }
 
     // Manual encode(to:) because LiqPay expects the sandbox card's fields flattened onto the
@@ -72,6 +77,7 @@ public struct PayRequest: LiqPayAction {
         try container.encode(orderId, forKey: .orderId)
         try container.encodeIfPresent(paytype, forKey: .paytype)
         try container.encodeIfPresent(applePayToken, forKey: .applePayToken)
+        try container.encodeIfPresent(rroInfo, forKey: .rroInfo)
         try container.encodeIfPresent(serverURL, forKey: .serverURL)
         try container.encodeIfPresent(language, forKey: .language)
         if let card {

@@ -12,6 +12,7 @@ Body: data=<base64 JSON>&signature=<base64 SHA1>
 ## Actions
 
 - [x] `action=pay` — Charge a payment (`Client.Payments.charge`)
+  - [x] ПРРО fiscalization — `rro_info` payload on `pay` (`LiqPayRROInfo`)
 - [x] `action=status` — Query payment status by `order_id` (`Client.Payments.status`)
 - [ ] `action=hold` — Hold funds for later capture
 - [ ] `action=refund` — Refund a completed payment
@@ -27,6 +28,8 @@ Body: data=<base64 JSON>&signature=<base64 SHA1>
 
 ## Known limitations
 
+- LiqPay fiscalizes UAH payments only; `rro_info` is ignored for other currencies.
+- Item `cost`/goods `id` consistency is validated by LiqPay server-side, not by this client.
 - `LiqPayOutcome` doesn't yet have a dedicated case for `status: "reversed"` (a payment refunded
   out-of-band) — it currently falls through to `.pending`. Revisit once `refund` is implemented.
 - Apple Pay token unwrapping (turning a full ApplePayJS wrapper into the `applepay_token` field

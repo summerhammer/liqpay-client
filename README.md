@@ -102,6 +102,21 @@ case .failed(let code, let message):
 }
 ```
 
+Fiscalization (ПРРО):
+
+```swift
+let response = try await client.payments.charge(
+    amount: 250,
+    currency: "UAH",
+    description: "Coffee",
+    orderId: OrderId("order-456"),
+    rroInfo: LiqPayRROInfo(
+        items: [.init(amount: 1, price: 250, cost: 250, id: 12345)],
+        deliveryEmails: ["customer@example.com"]
+    )
+)
+```
+
 Querying status directly:
 
 ```swift
