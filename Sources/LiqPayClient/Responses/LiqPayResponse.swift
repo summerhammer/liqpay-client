@@ -15,6 +15,11 @@ public struct LiqPayResponse: Decodable, Sendable {
     public let errDescription: String?
     /// Some LiqPay error responses carry the error under `code` instead of `err_code`.
     public let code: String?
+    /// ПРРО fiscalization outcome for the charge (e.g. `success` / `failure`).
+    /// Present only for merchants with LiqPay's fiscal register enabled.
+    public let rroReceiptStatus: String?
+    /// Human-readable fiscalization error accompanying a failed `rroReceiptStatus`.
+    public let rroErrDescription: String?
 
     enum CodingKeys: String, CodingKey {
         case result, status, action, paytype, amount, currency, code
@@ -24,6 +29,8 @@ public struct LiqPayResponse: Decodable, Sendable {
         case transactionId = "transaction_id"
         case errCode = "err_code"
         case errDescription = "err_description"
+        case rroReceiptStatus = "rro_receipt_status"
+        case rroErrDescription = "rro_err_description"
     }
 
     public init(
@@ -39,7 +46,9 @@ public struct LiqPayResponse: Decodable, Sendable {
         currency: String? = nil,
         errCode: String? = nil,
         errDescription: String? = nil,
-        code: String? = nil
+        code: String? = nil,
+        rroReceiptStatus: String? = nil,
+        rroErrDescription: String? = nil
     ) {
         self.result = result
         self.status = status
@@ -54,5 +63,7 @@ public struct LiqPayResponse: Decodable, Sendable {
         self.errCode = errCode
         self.errDescription = errDescription
         self.code = code
+        self.rroReceiptStatus = rroReceiptStatus
+        self.rroErrDescription = rroErrDescription
     }
 }

@@ -29,6 +29,19 @@ struct WebhookDecodingTests {
         #expect(response.orderId == OrderId("order-123"))
         #expect(response.outcome == .succeeded(isSandbox: true))
         #expect(response.paymentId == 12345)
+        #expect(response.rroReceiptStatus == nil)
+        #expect(response.rroErrDescription == nil)
+    }
+
+    @Test func decodesFiscalizationFieldsWhenPresent() throws {
+        let envelope = Self.signedEnvelope(
+            json: #"{"order_id":"order-123","status":"success","rro_receipt_status":"failure","rro_err_description":"Не вдалося провести фіскалізацію платежу."}"#
+        )
+
+        let response = try Self.makeClient().webhooks.decode(data: envelope.data, signature: envelope.signature)
+
+        #expect(response.rroReceiptStatus == "failure")
+        #expect(response.rroErrDescription == "Не вдалося провести фіскалізацію платежу.")
     }
 
     @Test func throwsInvalidSignatureForTamperedSignature() {
