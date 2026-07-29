@@ -14,6 +14,7 @@ extension Client {
             paytype: String? = nil,
             applePayToken: String? = nil,
             card: LiqPaySandboxCard? = nil,
+            rroInfo: LiqPayRROInfo? = nil,
             serverURL: URL? = nil,
             language: String? = nil
         ) async throws(LiqPayClientError) -> LiqPayResponse {
@@ -27,6 +28,7 @@ extension Client {
                 paytype: paytype,
                 applePayToken: applePayToken,
                 card: card,
+                rroInfo: rroInfo,
                 serverURL: serverURL ?? client.configuration.callbackURL,
                 language: language ?? client.configuration.defaultLanguage
             )

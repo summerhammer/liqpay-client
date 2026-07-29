@@ -65,6 +65,37 @@ struct ClientPaymentsChargeTests {
         #expect(response.orderId == TestFactories.orderId())
     }
 
+    @Test func passesRROInfoThroughToSignedPayload() async throws {
+        let transport = MockTransport()
+        let client = TestFactories.client(transport: transport)
+
+        _ = try await client.payments.charge(
+            amount: 550,
+            currency: "UAH",
+            description: "Membership",
+            orderId: TestFactories.orderId(),
+            rroInfo: TestFactories.rroInfo()
+        )
+
+        let sentRequest = try #require(await transport.lastRequest)
+        let decodedData = try #require(Data(base64Encoded: sentRequest.data))
+        let json = try #require(try JSONSerialization.jsonObject(with: decodedData) as? [String: Any])
+
+        let rroInfo = try #require(json["rro_info"] as? [String: Any])
+        let deliveryEmails = try #require(rroInfo["delivery_emails"] as? [String])
+        #expect(deliveryEmails == ["client@example.com"])
+
+        let items = try #require(rroInfo["items"] as? [[String: Any]])
+        #expect(items.count == 1)
+        #expect(items[0]["id"] as? Int == 12345)
+
+        #expect(LiqPaySigner.verify(
+            privateKey: TestFactories.privateKey(),
+            data: sentRequest.data,
+            signature: sentRequest.signature
+        ))
+    }
+
 }
 
 private func setStubbedResponse(on transport: MockTransport, body: Data) async {

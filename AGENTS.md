@@ -22,6 +22,7 @@ The domain logic (signing, `pay`/`status` request/response models, status-outcom
 - Framework-specific integrations (e.g. Vapor webhook handlers) belong in their own separate module (e.g. a future `LiqPayClientVapor` target), never folded into core.
 - When adding a new transport or framework integration, add a new target/product in `Package.swift` rather than adding conditional code or optional dependencies to the core target.
 - `Client` (this package's facade) and `Vapor.Client` share a name. Any file importing both `Vapor` and `LiqPayClient` must qualify as `LiqPayClient.Client` / `Vapor.Client` — don't rely on bare `Client` resolving correctly.
+- Nested wire payloads (e.g. `LiqPayRROInfo`) use synthesized `Encodable` with explicit `CodingKeys` and encode nested via `encodeIfPresent` — unlike `LiqPaySandboxCard`, which is flattened; `LiqPayEnvelopeEncoder`'s `.sortedKeys` applies recursively so signing stays deterministic.
 
 ## Adding a new LiqPay action
 

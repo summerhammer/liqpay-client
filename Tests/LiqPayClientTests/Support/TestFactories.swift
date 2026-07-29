@@ -50,4 +50,11 @@ enum TestFactories {
         """
         return Data(json.utf8)
     }
+
+    static func rroInfo(
+        items: [LiqPayRROInfo.Item]? = [.init(amount: 2, price: 100.5, cost: 201, id: 12345)],
+        deliveryEmails: [String]? = ["client@example.com"]
+    ) -> LiqPayRROInfo {
+        LiqPayRROInfo(items: items, deliveryEmails: deliveryEmails)
+    }
 }
