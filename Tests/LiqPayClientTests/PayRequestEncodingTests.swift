@@ -42,6 +42,7 @@ struct PayRequestEncodingTests {
 
         #expect(json["paytype"] == nil)
         #expect(json["applepay_token"] == nil)
+        #expect(json["gpay_token"] == nil)
         #expect(json["server_url"] == nil)
         #expect(json["language"] == nil)
         #expect(json["card"] == nil)
@@ -68,6 +69,27 @@ struct PayRequestEncodingTests {
 
         #expect(json["paytype"] as? String == "apay")
         #expect(json["applepay_token"] as? String == "base64-payment-data")
+        #expect(json["server_url"] as? String == "https://example.com/liqpay/callback")
+        #expect(json["language"] as? String == "uk")
+    }
+
+    @Test func encodesGooglePayFields() throws {
+        let request = PayRequest(
+            version: 3,
+            publicKey: PublicKey("sandbox_test_public_key"),
+            amount: 550,
+            currency: "UAH",
+            description: "Membership",
+            orderId: OrderId("order-123"),
+            paytype: "gpay",
+            googlePayToken: LiqPayGooglePayToken(base64: "base64-token"),
+            serverURL: URL(string: "https://example.com/liqpay/callback"),
+            language: "uk"
+        )
+        let json = try encodeToJSONObject(request)
+
+        #expect(json["paytype"] as? String == "gpay")
+        #expect(json["gpay_token"] as? String == "base64-token")
         #expect(json["server_url"] as? String == "https://example.com/liqpay/callback")
         #expect(json["language"] as? String == "uk")
     }

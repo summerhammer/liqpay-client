@@ -15,6 +15,8 @@ public struct PayRequest: LiqPayAction {
     /// Base64 Apple Pay payment data. Unwrapping a full ApplePayJS token down to just this inner
     /// `paymentData` is an application-side concern and out of scope for this package.
     public var applePayToken: String?
+    /// Google Pay payment token (`gpay_token`); pair with `paytype: "gpay"`.
+    public var googlePayToken: LiqPayGooglePayToken?
     /// Sandbox-only plain-card testing path.
     public var card: LiqPaySandboxCard?
     /// ПРРО fiscalization payload (`rro_info`).
@@ -32,6 +34,7 @@ public struct PayRequest: LiqPayAction {
         orderId: OrderId,
         paytype: String? = nil,
         applePayToken: String? = nil,
+        googlePayToken: LiqPayGooglePayToken? = nil,
         card: LiqPaySandboxCard? = nil,
         rroInfo: LiqPayRROInfo? = nil,
         serverURL: URL? = nil,
@@ -45,6 +48,7 @@ public struct PayRequest: LiqPayAction {
         self.orderId = orderId
         self.paytype = paytype
         self.applePayToken = applePayToken
+        self.googlePayToken = googlePayToken
         self.card = card
         self.rroInfo = rroInfo
         self.serverURL = serverURL
@@ -56,6 +60,7 @@ public struct PayRequest: LiqPayAction {
         case publicKey = "public_key"
         case orderId = "order_id"
         case applePayToken = "applepay_token"
+        case googlePayToken = "gpay_token"
         case serverURL = "server_url"
         case card
         case cardExpMonth = "card_exp_month"
@@ -77,6 +82,7 @@ public struct PayRequest: LiqPayAction {
         try container.encode(orderId, forKey: .orderId)
         try container.encodeIfPresent(paytype, forKey: .paytype)
         try container.encodeIfPresent(applePayToken, forKey: .applePayToken)
+        try container.encodeIfPresent(googlePayToken, forKey: .googlePayToken)
         try container.encodeIfPresent(rroInfo, forKey: .rroInfo)
         try container.encodeIfPresent(serverURL, forKey: .serverURL)
         try container.encodeIfPresent(language, forKey: .language)

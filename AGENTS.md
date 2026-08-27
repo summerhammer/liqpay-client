@@ -23,6 +23,7 @@ The domain logic (signing, `pay`/`status` request/response models, status-outcom
 - When adding a new transport or framework integration, add a new target/product in `Package.swift` rather than adding conditional code or optional dependencies to the core target.
 - `Client` (this package's facade) and `Vapor.Client` share a name. Any file importing both `Vapor` and `LiqPayClient` must qualify as `LiqPayClient.Client` / `Vapor.Client` — don't rely on bare `Client` resolving correctly.
 - Nested wire payloads (e.g. `LiqPayRROInfo`) use synthesized `Encodable` with explicit `CodingKeys` and encode nested via `encodeIfPresent` — unlike `LiqPaySandboxCard`, which is flattened; `LiqPayEnvelopeEncoder`'s `.sortedKeys` applies recursively so signing stays deterministic.
+- `LiqPayGooglePayToken` owns the base64 step LiqPay requires for `gpay_token`; it encodes as a bare string, not an object.
 
 ## Adding a new LiqPay action
 

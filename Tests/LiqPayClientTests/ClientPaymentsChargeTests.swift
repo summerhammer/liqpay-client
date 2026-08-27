@@ -96,6 +96,40 @@ struct ClientPaymentsChargeTests {
         ))
     }
 
+    @Test func passesGooglePayTokenThroughToSignedPayload() async throws {
+        let transport = MockTransport()
+        let client = TestFactories.client(transport: transport)
+
+        let tokenJSON = """
+        {"protocolVersion":"ECv2","signature":"abc","signedMessage":"..."}
+        """
+        let googlePayToken = LiqPayGooglePayToken(tokenJSON: tokenJSON)
+
+        _ = try await client.payments.charge(
+            amount: 550,
+            currency: "UAH",
+            description: "Membership",
+            orderId: TestFactories.orderId(),
+            paytype: "gpay",
+            googlePayToken: googlePayToken
+        )
+
+        let sentRequest = try #require(await transport.lastRequest)
+        let decodedData = try #require(Data(base64Encoded: sentRequest.data))
+        let json = try #require(try JSONSerialization.jsonObject(with: decodedData) as? [String: Any])
+
+        #expect(json["paytype"] as? String == "gpay")
+
+        let expectedBase64 = Data(tokenJSON.utf8).base64EncodedString()
+        #expect(json["gpay_token"] as? String == expectedBase64)
+
+        #expect(LiqPaySigner.verify(
+            privateKey: TestFactories.privateKey(),
+            data: sentRequest.data,
+            signature: sentRequest.signature
+        ))
+    }
+
 }
 
 private func setStubbedResponse(on transport: MockTransport, body: Data) async {
