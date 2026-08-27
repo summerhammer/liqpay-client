@@ -7,6 +7,7 @@ Linux (Swift on Server) as well as Darwin — no Apple-only APIs.
 
 - `pay` (charge) and `status` actions, with LiqPay's status vocabulary already classified into a
   simple succeeded/pending/failed outcome
+- Apple Pay and Google Pay wallet charges (`applepay_token` / `gpay_token` on `pay`)
 - Signed webhook (`server_url` callback) verification and decoding
 - Transport-agnostic core — bring your own HTTP client, or use the bundled Vapor transport
 - Namespaced API: `client.payments.charge(...)`, `client.payments.status(...)`, `client.webhooks.decode(...)`
@@ -116,6 +117,31 @@ let response = try await client.payments.charge(
     )
 )
 ```
+
+Google Pay (encrypted-token flow — LiqPay decrypts the token, no PCI DSS needed):
+
+```swift
+// `tokenJSON` is the string your Android/web app got from Google:
+// paymentData.paymentMethodData.tokenizationData.token — forward it verbatim, do not parse it.
+let response = try await client.payments.charge(
+    amount: 550,
+    currency: "UAH",
+    description: "Membership",
+    orderId: OrderId("order-789"),
+    paytype: "gpay",
+    googlePayToken: LiqPayGooglePayToken(tokenJSON: tokenJSON)
+)
+```
+
+`LiqPayGooglePayToken(tokenJSON:)` does the base64 encoding LiqPay requires; if the app already
+sent it base64-encoded, use `LiqPayGooglePayToken(base64:)` instead. On the app side, configure
+Google Pay's `PAYMENT_GATEWAY` tokenization with `gateway: "liqpay"` and `gatewayMerchantId: <your
+LiqPay public_key>`, card networks `MASTERCARD`/`VISA`, auth methods `PAN_ONLY`/`CRYPTOGRAM_3DS`.
+A `3ds_verify` status in the response means LiqPay wants a 3-D Secure confirmation step, which
+this client does not yet model.
+
+Apple Pay works the same way with `paytype: "apay"` and `applePayToken:` (the base64
+`paymentData` from the Apple Pay token).
 
 Querying status directly:
 

@@ -25,6 +25,29 @@ The domain logic (signing, `pay`/`status` request/response models, status-outcom
 - Nested wire payloads (e.g. `LiqPayRROInfo`) use synthesized `Encodable` with explicit `CodingKeys` and encode nested via `encodeIfPresent` — unlike `LiqPaySandboxCard`, which is flattened; `LiqPayEnvelopeEncoder`'s `.sortedKeys` applies recursively so signing stays deterministic.
 - `LiqPayGooglePayToken` owns the base64 step LiqPay requires for `gpay_token`; it encodes as a bare string, not an object.
 
+## Wallet payments (Apple Pay / Google Pay)
+
+Both are plain `pay` charges with a `paytype` and a token field — no separate action:
+
+| Wallet | `paytype` | Token parameter on `charge`/`PayRequest` | Wire field |
+|---|---|---|---|
+| Apple Pay | `"apay"` | `applePayToken: String` (base64 `paymentData`) | `applepay_token` |
+| Google Pay | `"gpay"` | `googlePayToken: LiqPayGooglePayToken` | `gpay_token` |
+
+- Google Pay: the app forwards `paymentMethodData.tokenizationData.token` (a JSON string) as-is;
+  the backend wraps it in `LiqPayGooglePayToken(tokenJSON:)`, which base64-encodes it the way
+  LiqPay expects. Use `init(base64:)` only if the app already encoded it. Google Pay on the app
+  must be configured with `gateway: "liqpay"`, `gatewayMerchantId: <LiqPay public_key>`.
+- Only Google Pay's encrypted-token flow is modelled. The decrypted-token flow (`paytype=gpay_tavv`
+  + `tavv`/`card`/…) requires PCI DSS and is deliberately unsupported — don't add it without that
+  context.
+- LiqPay's Google Pay docs say `version: 7`; the client sends `Client.apiVersion` (3), which
+  LiqPay accepts. Don't bump the version just for Google Pay.
+- Docs source: https://www.liqpay.ua/en/doc/api/internet_acquiring/gpay (JS SPA — fetch it in a
+  browser, `curl`/WebFetch only returns the shell). The "Encrypted token" tab is `?tab=2`.
+- Tests to mirror when touching this: `GooglePayTokenTests`, `PayRequestEncodingTests.encodesGooglePayFields`,
+  `ClientPaymentsChargeTests.passesGooglePayTokenThroughToSignedPayload`.
+
 ## Adding a new LiqPay action
 
 1. Add an unchecked row to [ENDPOINTS.md](ENDPOINTS.md) if one doesn't already exist.
